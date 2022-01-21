@@ -1,0 +1,4 @@
+C:/Users/Sachi/Documents/rchat/build/CMakeFiles/rcclient.dir
+C:/Users/Sachi/Documents/rchat/build/CMakeFiles/rebuild_cache.dir
+C:/Users/Sachi/Documents/rchat/build/CMakeFiles/rcserver.dir
+C:/Users/Sachi/Documents/rchat/build/CMakeFiles/edit_cache.dir

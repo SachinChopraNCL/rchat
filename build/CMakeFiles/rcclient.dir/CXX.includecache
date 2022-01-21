@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+C:/Users/Sachi/Documents/rchat/src/client/src/client.cpp
+WinSock2.h
+-
+windows.h
+-
+WS2tcpip.h
+-
+stdlib.h
+-
+stdio.h
+-
+

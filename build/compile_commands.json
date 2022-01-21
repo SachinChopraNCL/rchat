@@ -1,0 +1,12 @@
+[
+{
+  "directory": "C:/Users/Sachi/Documents/rchat/build",
+  "command": "C:\\MinGW\\bin\\mingw32-g++.exe   -g -o CMakeFiles\\rcclient.dir\\src\\client\\src\\client.cpp.obj -c C:\\Users\\Sachi\\Documents\\rchat\\src\\client\\src\\client.cpp",
+  "file": "C:/Users/Sachi/Documents/rchat/src/client/src/client.cpp"
+},
+{
+  "directory": "C:/Users/Sachi/Documents/rchat/build",
+  "command": "C:\\MinGW\\bin\\mingw32-g++.exe   -g -o CMakeFiles\\rcserver.dir\\src\\server\\src\\server.cpp.obj -c C:\\Users\\Sachi\\Documents\\rchat\\src\\server\\src\\server.cpp",
+  "file": "C:/Users/Sachi/Documents/rchat/src/server/src/server.cpp"
+}
+]
