@@ -23,18 +23,21 @@ void linebreak()
 }
 
 int __cdecl main(int argc, char** argv){
-    
-    printf("CLIENT INTERFACE");
+    printf("--------------------------------\n");
+    printf("--------------------------------\n");
+    printf("client interface");
     linebreak();
 
     WSADATA wsaData; 
-    SOCKET connectSocket = INVALID_SOCKET; 
-    struct addrinfo  *result = NULL, 
-                     *ptr = NULL,
+    SOCKET server  = INVALID_SOCKET; 
+
+    // Addrinfo holds host address information
+    struct addrinfo  *addrResults = NULL, 
+                     *ptrToAddr = NULL,
                      hints;
 
     char recvbuf[BUFLEN];
-    int iResult;
+    int result;
     int recvbuflen = BUFLEN;
 
     if(argc != 2) {
@@ -44,9 +47,10 @@ int __cdecl main(int argc, char** argv){
 
     printf("WSA is starting up...");
     
-    iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
-    if(iResult != 0) { 
-        printf("WSAStartup failed with error: %d", iResult);
+    // Initialise winsock2 
+    result = WSAStartup(MAKEWORD(2,2), &wsaData);
+    if(result != 0) { 
+        printf("WSAStartup failed with error: %d", result);
     }
 
     linebreak();
@@ -58,25 +62,28 @@ int __cdecl main(int argc, char** argv){
 
     printf("getting server information...");
 
-    iResult = getaddrinfo(argv[1], PORT, &hints, &result);
-    if(iResult != 0) {
-        printf("getaddrinfo failed with error: %d", iResult);
+    // Translation from host name to an address getting all sockets that could be used for connection
+    result = getaddrinfo(argv[1], PORT, &hints, &addrResults);
+    if(result != 0) {
+        printf("getaddrinfo failed with error: %d", result);
         WSACleanup();
         return 1;
     }
 
-    for(ptr = result; ptr != NULL;  ptr = ptr->ai_next) {
-        connectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-        if(connectSocket == INVALID_SOCKET) {
+    // Check which server socket is valid and available
+    for(ptrToAddr = addrResults; ptrToAddr != NULL;  ptrToAddr = ptrToAddr->ai_next) {
+        server  = socket(ptrToAddr->ai_family, ptrToAddr->ai_socktype, ptrToAddr->ai_protocol);
+        if(server  == INVALID_SOCKET) {
             printf("socket failed with error: %ld", WSAGetLastError());
             WSACleanup();
             return 1; 
         }
 
-        iResult = connect(connectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
-        if(iResult == SOCKET_ERROR) {
-            closesocket(connectSocket);
-            connectSocket = INVALID_SOCKET; 
+        // Attempt connection to the socket
+        result = connect(server , ptrToAddr->ai_addr, (int)ptrToAddr->ai_addrlen);
+        if(result == SOCKET_ERROR) {
+            closesocket(server );
+            server  = INVALID_SOCKET; 
             continue;
         }
         printf("connected!");
@@ -84,9 +91,9 @@ int __cdecl main(int argc, char** argv){
     }
     
     linebreak();
-    freeaddrinfo(result);
+    freeaddrinfo(addrResults);
 
-    if(connectSocket == INVALID_SOCKET) {
+    if(server  == INVALID_SOCKET) {
         printf("Unable to connect to server!\n");
         WSACleanup();
         return 1; 
@@ -95,42 +102,42 @@ int __cdecl main(int argc, char** argv){
     printf("connection session is progress - id 0\n");
 
     std::string sendbuf;
-    printf("message: ");
+    printf("send message: ");
     std::cin >> sendbuf;
 
-    iResult = send(connectSocket, sendbuf.c_str(), (int)strlen(sendbuf.c_str()), 0);
-    if(iResult == SOCKET_ERROR) {
+    result = send(server , sendbuf.c_str(), (int)strlen(sendbuf.c_str()), 0);
+    if(result == SOCKET_ERROR) {
         printf("send failed with error: %d\n", WSAGetLastError());
-        closesocket(connectSocket);
+        closesocket(server );
         WSACleanup();
         return 1;
     }
     
     do {
-        iResult = recv(connectSocket, recvbuf, recvbuflen, 0);
-        if(iResult > 0) {
+        result = recv(server , recvbuf, recvbuflen, 0);
+        if(result > 0) {
             printf("message received: %s", recvbuf);
         }
-        else if (iResult == 0) {
+        else if (result == 0) {
             linebreak();
             printf("connection closed...");
         }
         else
             printf("recv failed with error: %d", WSAGetLastError());
 
-    } while(iResult > 0 );
+    } while(result > 0 );
     
 
     // Disabling sends or receives on a socket
-    iResult = shutdown(connectSocket, SD_SEND);
-    if(iResult == SOCKET_ERROR) {
+    result = shutdown(server , SD_SEND);
+    if(result == SOCKET_ERROR) {
         printf("shutdown failed with error %d\n", WSAGetLastError());
-        closesocket(connectSocket);
-        connectSocket = INVALID_SOCKET;
+        closesocket(server );
+        server  = INVALID_SOCKET;
         return 1;
     } 
 
-    closesocket(connectSocket);
+    closesocket(server);
     WSACleanup();
 
     return 0;
