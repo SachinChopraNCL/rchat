@@ -80,7 +80,7 @@ int __cdecl main(void) {
         return 1;
     }
 
-    // accepts the connection from the first socket on the queue and assigns it
+    // Accepts the connection from the first socket on the queue and assigns it
     client = accept(listener, NULL, NULL);
     if(client == INVALID_SOCKET) {
         printf("accept failed with error: %d\n", WSAGetLastError());
@@ -89,22 +89,19 @@ int __cdecl main(void) {
         return 1; 
     }
 
-    closesocket(listener);
-
-    do {
+   while(true) {
         result = recv(client, recvbuf, recvbuflen, 0 );
         if(result > 0 ) {
-            sendResult = send(client, "server acknowledged message", result, 0);
+            sendResult = send(client, "[ACK]", result, 0);
             if(sendResult == SOCKET_ERROR) {
                 printf("send failed with error: %d\n", WSAGetLastError());
                 closesocket(client);
                 WSACleanup();
                 return 1;
             }
-            printf("message received: %s", recvbuf);
+            printf("\nmessage received: %s", recvbuf);
         }
         else if(result == 0) {
-            printf("connection closing...\n");
         }
         else {
             printf("recv failed with error: %d\n", WSAGetLastError());
@@ -112,7 +109,7 @@ int __cdecl main(void) {
             WSACleanup();
             return 1;
         }
-    } while(result > 0);
+    } 
 
     result = shutdown(client, SD_SEND);
     if(result == SOCKET_ERROR) {
@@ -122,7 +119,10 @@ int __cdecl main(void) {
         return 1;
     }
 
+    // Disabling sends or receives on these sockets
+    closesocket(listener);
     closesocket(client);
+    
     WSACleanup();
 
     return 0; 
