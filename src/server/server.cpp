@@ -5,9 +5,63 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <windows.h> 
+#include <thread>
+#include "formatting.h"
+
 
 #define BUFLEN 512
 #define PORT "27015"
+
+bool readyToSend = false; 
+
+void SendHandler(SOCKET client){
+    int result; 
+     while(true) {
+         // handle input 
+        if(readyToSend){
+            char sendbuf[64];
+            rchat::printsession("Send message: ");
+            scanf("%s", sendbuf);
+            result = send(client , sendbuf, (int)strlen(sendbuf), 0);
+            if(result == SOCKET_ERROR) {
+                rchat::printerrorld("Send failed with error", WSAGetLastError());
+                closesocket(client);
+                WSACleanup();
+                return ;
+            }
+        }
+     }
+}
+
+void ReceiveHandler(SOCKET client){
+    char recvbuf[BUFLEN];
+    int result;
+    int recvbuflen = BUFLEN;
+    while(true) {
+        result = recv(client, recvbuf, recvbuflen, 0 );
+        readyToSend = true;
+        if(result > 0 ) {
+            readyToSend = true;
+            if(result == SOCKET_ERROR) {
+                printf("send failed with error: %d\n", WSAGetLastError());
+                closesocket(client);
+                WSACleanup();
+                return;
+            }
+            printf("\nmessage received: %s", recvbuf);
+        }
+        else if(result == 0) {
+        }
+        else {
+            printf("recv failed with error: %d\n", WSAGetLastError());
+            closesocket(client);
+            WSACleanup();
+            return;
+        }  
+    } 
+
+}
+
 
 int __cdecl main(void) {
     printf("--------------------------------\n");
@@ -88,28 +142,13 @@ int __cdecl main(void) {
         WSACleanup();
         return 1; 
     }
+    
+    std::thread sender(SendHandler, client);
+    std::thread receiver(ReceiveHandler, client);
 
-   while(true) {
-        result = recv(client, recvbuf, recvbuflen, 0 );
-        if(result > 0 ) {
-            sendResult = send(client, "[ACK]", result, 0);
-            if(sendResult == SOCKET_ERROR) {
-                printf("send failed with error: %d\n", WSAGetLastError());
-                closesocket(client);
-                WSACleanup();
-                return 1;
-            }
-            printf("\nmessage received: %s", recvbuf);
-        }
-        else if(result == 0) {
-        }
-        else {
-            printf("recv failed with error: %d\n", WSAGetLastError());
-            closesocket(client);
-            WSACleanup();
-            return 1;
-        }
-    } 
+      
+    sender.join();
+    receiver.join();
 
     result = shutdown(client, SD_SEND);
     if(result == SOCKET_ERROR) {
