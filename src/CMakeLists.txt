@@ -7,10 +7,9 @@ add_subdirectory(helpers)
 
 target_link_libraries(rchat
     PRIVATE
-    clientimpl
-    helpersimpl
+    client
+    server
+    helpers
     wsock32
     ws2_32
 )
-
-1

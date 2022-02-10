@@ -1,23 +1,29 @@
 #include "client.h"
+#include "server.h"
 #include "formatting.h"
 
 #define BUFLEN 512
 #define PORT "27015"
 
 int __cdecl main(int argc, char** argv){
-    rchat::line();
-    rchat::printstart("Client Interface");
-    rchat::linebreak();
+    
+    std::string client_str("client");
 
-
-    if(argc != 2) {
-        printf("\nusages: %s server-name\n", argv[0]);
-        return 1;
+    if(client_str.compare(argv[1]) == 0){
+        rchat::line();
+        rchat::printstart("Client Interface");
+        rchat::linebreak();
+        client client_process = client(BUFLEN, PORT, argv[1]);
+        client_process.start_session();
+    } 
+    else {
+        rchat::line();
+        rchat::printstart("Server Interface");
+        rchat::linebreak();
+        server server_process = server(BUFLEN, PORT);
+        server_process.start_session(); 
     }
 
-    Client client = Client(BUFLEN, PORT, argv[1]);
-
-    client.StartSession();
 
     return 1; 
 }

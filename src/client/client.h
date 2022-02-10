@@ -11,33 +11,31 @@
 #include <stdio.h>
 #include <iostream> 
 #include <thread>
-#include "client.h"
 #include "formatting.h"
 
-class Client {
+class client {
 public:
-    Client(int buflen, char* port, char* ip):_buflen(buflen), _port(port), _ip(ip){}; 
-    void StartSession();
+    client(int buflen, char* port, char* ip):_buflen(buflen), _port(port), _ip(ip){}; 
+    void start_session();
+    void end_session(); 
 private: 
-    void InitialiseWSA(); 
-    void FindServerAndConnect(); 
-    void SendHandler();
-    void ReceiveHandler();
-    void KickThreads();
-    void EndSession(); 
+    void initialise_wsa(); 
+    void find_server_connect(); 
+    void send_handler();
+    void receive_handler();
+    void kick_threads();
 
-    WSADATA wsaData; 
-    SOCKET server  = INVALID_SOCKET; 
+    WSADATA _wsa_data; 
+    SOCKET _server  = INVALID_SOCKET; 
 
     // Addrinfo holds host address information
-    struct addrinfo *addrResults = NULL, 
-                    *ptrToAddr = NULL,
-                    hints;
+    struct addrinfo *_addr_results = NULL, 
+                    *_ptr_to_addr = NULL,
+                    _hints;
 
     int _result;
     unsigned int _buflen; 
     char* _port; 
     char* _ip; 
 };
-
 #endif

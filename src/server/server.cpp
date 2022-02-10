@@ -1,50 +1,140 @@
-#define _WIN32_WINNT 0x501
+#include "server.h"
 
-#include <winsock2.h> 
-#include <WS2tcpip.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <windows.h> 
-#include <thread>
-#include "formatting.h"
+/* For Visual Studio Compilers */
+#pragma comment(lib, "Ws2_32.lib")
+#pragma comment(lib, "Mswsock.lib")
+#pragma comment(lib, "AdvApi32.lib")
+/*----------------------------*/
 
+void server::start_session() {
+    initialise_wsa();
+    create_listener();
+    activate_listener();
+    accept_connection();
+    kick_threads();
+}
 
-#define BUFLEN 512
-#define PORT "27015"
+void server::initialise_wsa() {
+    rchat::printstart("WSA is starting up...");
+    
+    // Initialise winsock2 
+    _result = WSAStartup(MAKEWORD(2,2), &_wsa_data);
+    if(_result != 0) {
+        printf("WSAStartup failed with error: %d\n", _result);
+        return;
+    }
 
-bool readyToSend = false; 
+    rchat::linebreak();
 
-void SendHandler(SOCKET client){
+    ZeroMemory(&_hints, sizeof(_hints));
+    _hints.ai_family = AF_INET;
+    _hints.ai_socktype = SOCK_STREAM;
+    _hints.ai_protocol = IPPROTO_TCP;
+    _hints.ai_flags = AI_PASSIVE;
+}
+
+void server::create_listener() { 
+    rchat::printstart("Creating listener...");
+
+    // Translation from host name to an address getting all sockets that could be used for connection
+    _result = getaddrinfo(NULL, _port, &_hints, &_addr_results);
+    if(_result != 0 ) {
+        printf("getaddrinfo failed with error: %d\n", _result);
+        WSACleanup();
+        return; 
+    }
+    
+    // Create a socket
+    _listener = socket(_addr_results->ai_family, _addr_results->ai_socktype, _addr_results->ai_protocol);
+    if(_result == SOCKET_ERROR) {
+        printf("bind failed with error: %d\n", WSAGetLastError());
+        freeaddrinfo(_addr_results);
+        closesocket(_listener);
+        WSACleanup();
+        return; 
+    }
+
+    // Binds the local address to a socket - it is ready to listen
+    _result = bind(_listener, _addr_results->ai_addr, (int)_addr_results->ai_addrlen);
+    if(_result == SOCKET_ERROR) {
+        printf("bind failed with error: %d\n", WSAGetLastError());
+        freeaddrinfo(_addr_results);
+        closesocket(_listener);
+        WSACleanup();
+    }
+
+    freeaddrinfo(_addr_results);
+    
+    rchat::linebreak();
+}
+
+void server::activate_listener() {
+    rchat::printstart("Server listening...");
+
+    // Set the socket to listen - waiting for a connection from a client
+    _result = listen(_listener, SOMAXCONN);
+    if(_result == SOCKET_ERROR) {
+        printf("listen failed with error: %d\n", WSAGetLastError());
+        closesocket(_listener);
+        WSACleanup();
+        return;
+    }
+    rchat::linebreak();
+}
+
+void server::accept_connection() {
+    rchat::printstart("Attemping to accept connection...");
+
+    // Accepts the connection from the first socket on the queue and assigns it
+    _client = accept(_listener, NULL, NULL);
+    if(_client == INVALID_SOCKET) {
+        printf("accept failed with error: %d\n", WSAGetLastError());
+        closesocket(_listener);
+        WSACleanup();
+        return; 
+    }
+    rchat::linebreak();
+}
+
+void server::kick_threads() {
+    std::thread sender(&server::send_handler, this);
+    std::thread receiver(&server::receive_handler, this);
+
+    sender.join();
+    receiver.join();
+}
+
+void server::send_handler() {
     int result; 
      while(true) {
          // handle input 
-        if(readyToSend){
+        if(_ready_to_send){
             char sendbuf[64];
             rchat::printsession("Send message: ");
             scanf("%s", sendbuf);
-            result = send(client , sendbuf, (int)strlen(sendbuf), 0);
+            result = send(_client , sendbuf, (int)strlen(sendbuf), 0);
             if(result == SOCKET_ERROR) {
                 rchat::printerrorld("Send failed with error", WSAGetLastError());
-                closesocket(client);
+                closesocket(_client);
                 WSACleanup();
                 return ;
             }
         }
-     }
+    }
 }
 
-void ReceiveHandler(SOCKET client){
-    char recvbuf[BUFLEN];
+void server::receive_handler() {
+    char recvbuf[_buflen];
     int result;
-    int recvbuflen = BUFLEN;
+    int recvbuflen = _buflen;
     while(true) {
-        result = recv(client, recvbuf, recvbuflen, 0 );
-        readyToSend = true;
+        result = recv(_client, recvbuf, recvbuflen, 0 );
+        _ready_to_send = true;
         if(result > 0 ) {
-            readyToSend = true;
+            _ready_to_send = true;
             if(result == SOCKET_ERROR) {
                 printf("send failed with error: %d\n", WSAGetLastError());
-                closesocket(client);
+                closesocket(_client);
                 WSACleanup();
                 return;
             }
@@ -54,115 +144,11 @@ void ReceiveHandler(SOCKET client){
         }
         else {
             printf("recv failed with error: %d\n", WSAGetLastError());
-            closesocket(client);
+            closesocket(_client);
             WSACleanup();
             return;
         }  
     } 
-
 }
 
 
-int __cdecl main(void) {
-    printf("--------------------------------\n");
-    printf("--------------------------------\n");
-    printf("server interface\n");
-
-    WSADATA wsaData;
-
-    SOCKET listener = INVALID_SOCKET; 
-    SOCKET client = INVALID_SOCKET;
-
-    struct addrinfo* addrResults = NULL;
-    struct addrinfo hints; 
-    
-    int result; 
-    int sendResult; 
-    
-    char recvbuf[BUFLEN];
-    int recvbuflen = BUFLEN;
-
-    // Initialise winsock2 
-    result = WSAStartup(MAKEWORD(2,2), &wsaData);
-    if(result != 0) {
-        printf("WSAStartup failed with error: %d\n", result);
-        return 1;
-    }
-
-    ZeroMemory(&hints, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-    hints.ai_flags = AI_PASSIVE;
-
-    // Translation from host name to an address getting all sockets that could be used for connection
-    result = getaddrinfo(NULL, PORT, &hints, &addrResults);
-    if(result != 0 ) {
-        printf("getaddrinfo failed with error: %d\n", result);
-        WSACleanup();
-        return 1; 
-    }
-    
-    // Create a socket
-    listener = socket(addrResults->ai_family, addrResults->ai_socktype, addrResults->ai_protocol);
-    if(result == SOCKET_ERROR) {
-        printf("bind failed with error: %d\n", WSAGetLastError());
-        freeaddrinfo(addrResults);
-        closesocket(listener);
-        WSACleanup();
-        return 1; 
-    }
-
-    // Binds the local address to a socket - it is ready to listen
-    result = bind(listener, addrResults->ai_addr, (int)addrResults->ai_addrlen);
-    if(result == SOCKET_ERROR) {
-        printf("bind failed with error: %d\n", WSAGetLastError());
-        freeaddrinfo(addrResults);
-        closesocket(listener);
-        WSACleanup();
-        return 1;
-    }
-
-    freeaddrinfo(addrResults);
-
-    // Set the socket to listen - waiting for a connection from a client
-    result = listen(listener, SOMAXCONN);
-    if(result == SOCKET_ERROR) {
-        printf("listen failed with error: %d\n", WSAGetLastError());
-        closesocket(listener);
-        WSACleanup();
-        return 1;
-    }
-
-    // Accepts the connection from the first socket on the queue and assigns it
-    client = accept(listener, NULL, NULL);
-    if(client == INVALID_SOCKET) {
-        printf("accept failed with error: %d\n", WSAGetLastError());
-        closesocket(listener);
-        WSACleanup();
-        return 1; 
-    }
-    
-    std::thread sender(SendHandler, client);
-    std::thread receiver(ReceiveHandler, client);
-
-      
-    sender.join();
-    receiver.join();
-
-    result = shutdown(client, SD_SEND);
-    if(result == SOCKET_ERROR) {
-        printf("shutdown failed with error: %d\n", WSAGetLastError());
-        closesocket(client);
-        WSACleanup();
-        return 1;
-    }
-
-    // Disabling sends or receives on these sockets
-    closesocket(listener);
-    closesocket(client);
-    
-    WSACleanup();
-
-    return 0; 
-}
