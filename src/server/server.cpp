@@ -10,7 +10,6 @@ void server::start_session() {
     initialise_wsa();
     create_listener();
     activate_listener();
-    accept_connection();
     kick_threads();
 }
 
@@ -82,56 +81,62 @@ void server::activate_listener() {
     rchat::linebreak();
 }
 
-void server::accept_connection() {
-    rchat::printstart("Attemping to accept connection...");
-
-    // Accepts the connection from the first socket on the queue and assigns it
-    _client = accept(_listener, NULL, NULL);
-    if(_client == INVALID_SOCKET) {
-        printf("accept failed with error: %d\n", WSAGetLastError());
-        closesocket(_listener);
-        WSACleanup();
-        return; 
-    }
-    rchat::linebreak();
-}
-
 void server::kick_threads() {
     std::thread sender(&server::send_handler, this);
-    std::thread receiver(&server::receive_handler, this);
-
+    std::thread accept_connection(&server::accept_connection, this);
+    accept_connection.join();
     sender.join();
-    receiver.join();
+    for(client_socket_info& client : _clients) {
+        client._receive_ref.join();
+    }
+}
+
+void server::accept_connection() {
+    while(true) {
+        // Accepts the connection from the first socket on the queue and assigns it
+        SOCKET client_socket = accept(_listener, NULL, NULL);
+        _ready_to_send = true;
+        rchat::printstart("Attemping to accept connection...");
+        if(client_socket == INVALID_SOCKET) {
+            printf("accept failed with error: %d\n", WSAGetLastError());
+            closesocket(_listener);
+            WSACleanup();
+            return; 
+        }
+        _clients.push_back(client_socket_info(client_socket, 0));
+        rchat::linebreak();
+    }
 }
 
 void server::send_handler() {
     int result; 
      while(true) {
-         // handle input 
+         // Handle input 
         if(_ready_to_send){
             char sendbuf[64];
             rchat::printsession("Send message: ");
             scanf("%s", sendbuf);
-            result = send(_client , sendbuf, (int)strlen(sendbuf), 0);
-            if(result == SOCKET_ERROR) {
-                rchat::printerrorld("Send failed with error", WSAGetLastError());
-                closesocket(_client);
-                WSACleanup();
-                return ;
+            for(client_socket_info& client : _clients){
+                SOCKET current_client = client._client;
+                result = send(current_client, sendbuf, (int)strlen(sendbuf), 0);
+                if(result == SOCKET_ERROR) {
+                    rchat::printerrorld("Send failed with error", WSAGetLastError());
+                    closesocket(current_client);
+                    WSACleanup();
+                    return;
+                }
             }
         }
     }
 }
 
-void server::receive_handler() {
-    char recvbuf[_buflen];
+void server::client_socket_info::receive_handler() {
+    char recvbuf[512];
     int result;
-    int recvbuflen = _buflen;
+    int recvbuflen = 512;
     while(true) {
         result = recv(_client, recvbuf, recvbuflen, 0 );
-        _ready_to_send = true;
         if(result > 0 ) {
-            _ready_to_send = true;
             if(result == SOCKET_ERROR) {
                 printf("send failed with error: %d\n", WSAGetLastError());
                 closesocket(_client);
@@ -148,7 +153,8 @@ void server::receive_handler() {
             WSACleanup();
             return;
         }  
-    } 
+    }     
 }
+
 
 
