@@ -11,7 +11,9 @@
 #include <windows.h> 
 #include <thread>
 #include <vector>
+#include <queue>
 #include "formatting.h"
+#include "globals.h"
 
 #define MAX_CLIENTS 64 
 
@@ -25,19 +27,24 @@ private:
     void create_listener(); 
     void activate_listener(); 
     void accept_connection();
-    void send_handler();
+    void broadcast_handler(); 
     void kick_threads(); 
 
+    // Hold client information 
     class client_socket_info {
     public:
-        client_socket_info(SOCKET client, unsigned int id): _client(client), _id(id){
+        client_socket_info(SOCKET client, unsigned int id): _client_socket(client), _id(id){
             _receive_ref = std::thread(&client_socket_info::receive_handler, this);
         }
+        
         std::thread _receive_ref; 
-        SOCKET _client; 
+        SOCKET _client_socket; 
         unsigned int _id;
+        std::queue<rchat::message> _message_queue; 
+
     private:
         void receive_handler();
+        rchat::message _msg; 
     };
 
     WSADATA _wsa_data; 
@@ -45,7 +52,7 @@ private:
     SOCKET _listener  = INVALID_SOCKET;
     SOCKET _client_socket = INVALID_SOCKET;
 
-    std::vector<client_socket_info> _clients; 
+    std::vector<client_socket_info*> _clients; 
 
     struct addrinfo* _addr_results = NULL;
     struct addrinfo _hints; 
