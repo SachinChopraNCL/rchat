@@ -13,7 +13,7 @@ int __cdecl main(int argc, char** argv){
         rchat::line();
         rchat::printstart("Client Interface");
         rchat::linebreak();
-        client client_process = client(BUFLEN, PORT, argv[1]);
+        client client_process = client(PORT, argv[1]);
         client_process.start_session();
     } 
     else {

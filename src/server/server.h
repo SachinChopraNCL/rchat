@@ -14,8 +14,8 @@
 #include <queue>
 #include "formatting.h"
 #include "globals.h"
+#include "clientsocketinfo.h"
 
-#define MAX_CLIENTS 64 
 
 class server {
 public: 
@@ -29,23 +29,6 @@ private:
     void accept_connection();
     void broadcast_handler(); 
     void kick_threads(); 
-
-    // Hold client information 
-    class client_socket_info {
-    public:
-        client_socket_info(SOCKET client, unsigned int id): _client_socket(client), _id(id){
-            _receive_ref = std::thread(&client_socket_info::receive_handler, this);
-        }
-        
-        std::thread _receive_ref; 
-        SOCKET _client_socket; 
-        unsigned int _id;
-        std::queue<rchat::message> _message_queue; 
-
-    private:
-        void receive_handler();
-        rchat::message _msg; 
-    };
 
     WSADATA _wsa_data; 
     

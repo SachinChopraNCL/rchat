@@ -3,6 +3,9 @@
 
 #include <stdio.h>
 
+#define MAX_CLIENTS 64 
+
+
 namespace rchat {
     const int BUF_LEN = 64; 
 

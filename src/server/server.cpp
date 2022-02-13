@@ -112,8 +112,33 @@ void server::accept_connection() {
     }
 }
 
+void server::broadcast_handler(){
+    int result; 
+    while(true) {
+        // Broadcasting to other clients
+        if(_ready_to_send && _clients.size() >= 2) {
+            for(client_socket_info* client : _clients) {
+                if(client->_message_queue.size() <= 0) continue; 
+                rchat::message msg_to_send = client->_message_queue.front();
+                for(client_socket_info* other_client: _clients) {
+                    if(client->_id == other_client->_id) continue; 
+                    result = send(other_client->_client_socket, msg_to_send._content, (int)strlen(msg_to_send._content),0);
+                    rchat::fprintsession("Sending message to other clients: ", msg_to_send._content);
+                    if(result == SOCKET_ERROR) {
+                        rchat::printerrorld("Send failed with error", WSAGetLastError());
+                        closesocket(client->_client_socket);
+                        WSACleanup();
+                        return;
+                    }
+                }
+                printf("\nClient %i: %s\n", client->_id, msg_to_send._content);
+                client->_message_queue.pop();
+            }
+        }
+    }
+}
 
-void server::client_socket_info::receive_handler() {
+void client_socket_info::receive_handler() {
     int result;
     while(true) {
         result = recv(_client_socket, _msg._content, rchat::BUF_LEN, 0 );
@@ -137,31 +162,6 @@ void server::client_socket_info::receive_handler() {
     }     
 }
 
-
-void server::broadcast_handler(){
-    int result; 
-    while(true) {
-        // Broadcasting to other clients
-        if(_ready_to_send && _clients.size() >= 2) {
-            for(client_socket_info* client : _clients) {
-                if(client->_message_queue.size() <= 0) continue; 
-                rchat::message msg_to_send = client->_message_queue.front();
-                for(client_socket_info* other_client: _clients) {
-                    if(client->_id == other_client->_id) continue; 
-                    result = send(other_client->_client_socket, msg_to_send._content, (int)strlen(msg_to_send._content),0);
-                    rchat::fprintsession("Sending message to other clients: ", msg_to_send._content);
-                    if(result == SOCKET_ERROR) {
-                        rchat::printerrorld("Send failed with error", WSAGetLastError());
-                        closesocket(client->_client_socket);
-                        WSACleanup();
-                        return;
-                    }
-                }
-                client->_message_queue.pop();
-            }
-        }
-    }
-}
 
 
 

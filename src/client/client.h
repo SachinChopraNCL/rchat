@@ -12,10 +12,11 @@
 #include <iostream> 
 #include <thread>
 #include "formatting.h"
+#include "globals.h"
 
 class client {
 public:
-    client(int buflen, char* port, char* ip):_buflen(buflen), _port(port), _ip(ip){}; 
+    client(char* port, char* ip):_port(port), _ip(ip){}; 
     void start_session();
     void end_session(); 
 private: 
@@ -34,7 +35,6 @@ private:
                     _hints;
 
     int _result;
-    unsigned int _buflen; 
     char* _port; 
     char* _ip; 
 };

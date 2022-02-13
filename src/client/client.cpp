@@ -93,7 +93,7 @@ void client::send_handler() {
     int result; 
     while(true) {
         // handle input 
-        char sendbuf[_buflen];
+        char sendbuf[rchat::BUF_LEN];
         rchat::printsession("Send message: ");
         scanf("%s", sendbuf);
         result = send(_server , sendbuf, (int)strlen(sendbuf), 0);
@@ -107,10 +107,10 @@ void client::send_handler() {
 }
 
 void client::receive_handler() {
-    char recvbuf[_buflen];
+    char recvbuf[rchat::BUF_LEN];
     int result;
     while(true) {
-        result = recv(_server , recvbuf, _buflen, 0);
+        result = recv(_server , recvbuf, rchat::BUF_LEN, 0);
         if(result > 0) { 
             rchat::fprintsession("Server Response", recvbuf); 
         }   
