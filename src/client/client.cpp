@@ -34,7 +34,7 @@ void client::find_server_connect(){
     rchat::printstart("Getting server information...");
 
     // Translation from host name to an address getting all sockets that could be used for connection
-    _result = getaddrinfo("localhost", _port, &_hints, &_addr_results);
+    _result = getaddrinfo(_ip, _port, &_hints, &_addr_results);
     if(_result != 0) {
         rchat::printerrori("Getaddrinfo failed with error", _result);
         WSACleanup();
@@ -73,8 +73,6 @@ void client::find_server_connect(){
 }
 
 void client::kick_threads() {
-    char* ackSendBuf = "ACK";
-    _result = send(_server , ackSendBuf, (int)strlen(ackSendBuf), 0);
     if(_result == SOCKET_ERROR) {
         rchat::printerrorld("Send failed with error", WSAGetLastError());
         closesocket(_server);
@@ -103,6 +101,10 @@ void client::send_handler() {
             WSACleanup();
             return;
         }
+        if(rchat::EXIT.compare(sendbuf) == 0) {
+            end_session(); 
+            return; 
+        }
     }
 }
 
@@ -110,6 +112,7 @@ void client::receive_handler() {
     char recvbuf[rchat::BUF_LEN];
     int result;
     while(true) {
+        if(_end_session) return; 
         result = recv(_server , recvbuf, rchat::BUF_LEN, 0);
         if(result > 0) { 
             rchat::fprintsession("Server Response", recvbuf); 
@@ -129,7 +132,8 @@ void client::end_session() {
         _server  = INVALID_SOCKET;
         return;
     } 
-
+    rchat::printsession("Closing session");
+    _end_session = true;
     closesocket(_server);
     WSACleanup();
 }

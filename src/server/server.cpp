@@ -6,6 +6,8 @@
 #pragma comment(lib, "AdvApi32.lib")
 /*----------------------------*/
 
+// Global lock for the client list
+std::mutex _g_client_list_mutex; 
 
 void server::start_session() {
     initialise_wsa();
@@ -94,7 +96,6 @@ void server::kick_threads() {
 }
 
 void server::accept_connection() {
-    int id = 0; 
     while(true) {
         // Accepts the connection from the first socket on the queue and assigns it
         SOCKET client_socket = accept(_listener, NULL, NULL);
@@ -106,8 +107,23 @@ void server::accept_connection() {
             WSACleanup();
             return; 
         }
-        _clients.push_back(new client_socket_info(client_socket, id));
-        id++; 
+                
+        bool found_existing_client = false;
+
+        for(client_socket_info* client: _clients) { 
+                if(client->_id == _client_id + 1) {
+                    found_existing_client = true;
+                    break; 
+                }
+        }
+
+        if(!found_existing_client) {
+            std::lock_guard<std::mutex> guard(_g_client_list_mutex);
+            _clients.push_back(new client_socket_info(client_socket, _client_id));
+        }
+
+        _client_id++; 
+        
         rchat::linebreak();
     }
 }
@@ -116,14 +132,18 @@ void server::broadcast_handler(){
     int result; 
     while(true) {
         // Broadcasting to other clients
-        if(_ready_to_send && _clients.size() >= 2) {
+        if(_ready_to_send) {
+            // Lock the list
+            std::lock_guard<std::mutex> guard(_g_client_list_mutex);
             for(client_socket_info* client : _clients) {
-                if(client->_message_queue.size() <= 0) continue; 
+                if(client->_message_queue.empty()) continue;
+                // Lock the message queue
+                std::lock_guard<std::mutex> guard(client->_m_message_queue_mutex);
                 rchat::message msg_to_send = client->_message_queue.front();
                 for(client_socket_info* other_client: _clients) {
                     if(client->_id == other_client->_id) continue; 
-                    result = send(other_client->_client_socket, msg_to_send._content, (int)strlen(msg_to_send._content),0);
-                    rchat::fprintsession("Sending message to other clients: ", msg_to_send._content);
+                    result = send(other_client->_client_socket, "msg_to_send._content", 1,0);
+                    //rchat::fprintsession("Sending message to other clients: ", msg_to_send._content);
                     if(result == SOCKET_ERROR) {
                         rchat::printerrorld("Send failed with error", WSAGetLastError());
                         closesocket(client->_client_socket);
@@ -131,7 +151,7 @@ void server::broadcast_handler(){
                         return;
                     }
                 }
-                printf("\nClient %i: %s\n", client->_id, msg_to_send._content);
+                printf("\n[IN-SESSION] Client %i: %s \n", client->_id, msg_to_send._content);
                 client->_message_queue.pop();
             }
         }
@@ -149,7 +169,10 @@ void client_socket_info::receive_handler() {
                 WSACleanup();
                 return;
             }
+            // Lock the message queue
+            std::lock_guard<std::mutex> guard(_m_message_queue_mutex);
             _message_queue.push(_msg);
+            
         }
         else if(result == 0) {
         }

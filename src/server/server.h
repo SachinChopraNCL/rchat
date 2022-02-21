@@ -12,6 +12,9 @@
 #include <thread>
 #include <vector>
 #include <queue>
+#include <mutex> 
+#include <algorithm>
+
 #include "formatting.h"
 #include "globals.h"
 #include "clientsocketinfo.h"
@@ -36,6 +39,7 @@ private:
     SOCKET _client_socket = INVALID_SOCKET;
 
     std::vector<client_socket_info*> _clients; 
+    std::queue<rchat::message> _global_message_cache; 
 
     struct addrinfo* _addr_results = NULL;
     struct addrinfo _hints; 
@@ -45,5 +49,8 @@ private:
     int _result; 
     unsigned int _buflen; 
     char* _port; 
+
+    int _client_id = 0; 
+
 };
 #endif

@@ -9,6 +9,8 @@
 namespace rchat {
     const int BUF_LEN = 64; 
 
+    inline std::string EXIT("EXIT");
+
     struct message { 
         int  _message_length; 
         char _content [BUF_LEN];

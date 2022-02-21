@@ -15,15 +15,19 @@ class client_socket_info {
         client_socket_info(SOCKET client, unsigned int id): _client_socket(client), _id(id){
             // Kick receive thread 
             _receive_ref = std::thread(&client_socket_info::receive_handler, this);
+            _is_active = true; 
         }
         
         std::thread _receive_ref; 
         SOCKET _client_socket; 
         unsigned int _id;
+        bool _is_active = false;
         std::queue<rchat::message> _message_queue; 
+        std::mutex _m_message_queue_mutex;
 
     private:
         void receive_handler();
         rchat::message _msg; 
+        
 };
 #endif 

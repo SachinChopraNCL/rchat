@@ -37,5 +37,7 @@ private:
     int _result;
     char* _port; 
     char* _ip; 
+    
+    bool _end_session = false;
 };
 #endif
