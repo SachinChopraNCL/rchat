@@ -15,9 +15,9 @@
 #include <mutex> 
 #include <algorithm>
 
-#include "formatting.h"
-#include "globals.h"
-#include "clientsocketinfo.h"
+#include <formatting.h>
+#include <config.h>
+#include <clientsocketinfo.h>
 
 
 class server {
