@@ -4,9 +4,11 @@
 void client_session_handler::run() {
     rchat::printconsole("Welcome to RChat Client..."); 
     while(_current_state != session_state::EXIT) {
-        std::string option {"NULL"};
-        std::getline(std::cin, option); 
-        run_command(option);
+        if(_current_state == session_state::MENU) {
+            std::string option;
+            std::getline(std::cin , option); 
+            run_command(option);
+        }
     }
 }
 
@@ -22,13 +24,14 @@ void client_session_handler::run_command(std::string option) {
         get_info();
     }
     else {
-        rchat::printerror("Option not recognised!");
+        rchat::printerror("Option not recognised! \n");
     }
 }
 
 void client_session_handler::run_session(std::string ip) {
     rchat::linebreak(); 
     rchat::linebreak(); 
+    _current_state = session_state::IN_SESSION;
     auto current_session = std::make_unique<client_session>(_port.c_str(), ip.c_str()); 
     current_session->start_session(); 
 }
@@ -42,13 +45,13 @@ void client_session_handler::reset_session() {
 }
 
 void client_session_handler::get_info() { 
-    char message[rchat::MAX_CMD_LEN];
+    char message[rchat::global_network_variables::max_cmd_len];
     sprintf(message, "Port - %s", _port);
     rchat::printconsole(message);
 }
 
 void client_session_handler::set_port(std::string option) {
-    char message[rchat::MAX_CMD_LEN]; 
+    char message[rchat::global_network_variables::max_cmd_len]; 
     sprintf(message, "Port was %s. Now set to %s", _port, option);
     rchat::printconsole(message);
     _port = option;

@@ -3,6 +3,9 @@
 
 #include <stdio.h>
 
+
+// Swapping to MACROS!
+
 namespace rchat {
     
     inline void line() { printf("--------------------------------");}
@@ -17,7 +20,7 @@ namespace rchat {
 
     inline void fprintsession(const char* message, const char* buffer) { printf("\n[IN-SESSION] %s %s", message, buffer);}
     
-    inline void printerror(const char* message) { printf("\n[ERROR] %s", message); }
+    inline void printerror(const char* message) { printf("[ERROR] %s", message); }
 
     inline void printerrori(const char* message, signed int error) {printf("\n[ERROR] %s: %d", message, error);}
 

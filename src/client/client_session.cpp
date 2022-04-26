@@ -82,40 +82,39 @@ void client_session::kick_threads() {
         return; 
     }
 
-    std::thread sender(&client_session::send_handler, this);
-    std::thread receiver(&client_session::receive_handler, this);
-   
-    sender.join();
-    receiver.join();
+    _receive_ref = std::thread(&client_session::send_handler, this);
+    _send_ref = std::thread(&client_session::receive_handler, this);
+
+    _receive_ref.join();
+    _send_ref.join();
 }
 
 void client_session::send_handler() {
     int result; 
     while(true) {
         // handle input 
-        char sendbuf[rchat::BUF_LEN];
+        char sendbuf[rchat::global_network_variables::buflen];
         rchat::printsession("Send message: ");
         scanf("%s", sendbuf);
-        result = send(_server , sendbuf, (int)strlen(sendbuf), 0);
+        result = send(_server , sendbuf, (int)strlen(sendbuf) + 1, 0);
         if(result == SOCKET_ERROR) {
             rchat::printerrorld("Send failed with error", WSAGetLastError());
-            closesocket(_server);
-            WSACleanup();
+            end_session();
             return;
         }
-        if(rchat::EXIT.compare(sendbuf) == 0) {
+        if(rchat::global_network_variables::exit.compare(sendbuf) == 0) {
             end_session(); 
-            return; 
+            return;
         }
     }
 }
 
 void client_session::receive_handler() {
-    char recvbuf[rchat::BUF_LEN];
+    char recvbuf[rchat::global_network_variables::buflen];
     int result;
     while(true) {
+        result = recv(_server , recvbuf, rchat::global_network_variables::buflen, 0);
         if(_end_session) return; 
-        result = recv(_server , recvbuf, rchat::BUF_LEN, 0);
         if(result > 0) { 
             rchat::fprintsession("Server Response", recvbuf); 
         }   
@@ -127,6 +126,7 @@ void client_session::receive_handler() {
 
 
 void client_session::end_session() {
+    _end_session = true;
     _result = shutdown(_server , SD_SEND);
     if(_result == SOCKET_ERROR) {
         rchat::printerrorld("Shutdown failed with error", WSAGetLastError());
@@ -135,7 +135,6 @@ void client_session::end_session() {
         return;
     } 
     rchat::printsession("Closing session");
-    _end_session = true;
     closesocket(_server);
     WSACleanup();
 }

@@ -8,14 +8,14 @@
 #include <windows.h> 
 #include <thread>
 #include <queue>
-#include "globals.h"
+#include <config.h>
 
 class client_socket_info {
     public:
         client_socket_info(SOCKET client, unsigned int id): _client_socket(client), _id(id){
+            _is_active = true; 
             // Kick receive thread 
             _receive_ref = std::thread(&client_socket_info::receive_handler, this);
-            _is_active = true; 
         }
         
         std::thread _receive_ref; 

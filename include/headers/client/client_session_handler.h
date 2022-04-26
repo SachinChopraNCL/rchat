@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <algorithm>
+
 /* For mingw compiler */
 #define _WIN32_WINNT 0x501
 #define NUM_COMMANDS 4
@@ -22,7 +24,7 @@ enum session_state {
 
 class client_session_handler {
 public: 
-    client_session_handler(){};
+    client_session_handler(): _current_state(session_state::MENU){};
     void run(); 
 
 private: 
@@ -38,5 +40,4 @@ private:
 
     std::string _port = DEFAULT_PORT; 
 };
-
 #endif

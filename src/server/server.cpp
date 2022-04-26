@@ -156,7 +156,7 @@ void server::broadcast_handler(){
                 rchat::message msg_to_send = client->_message_queue.front();
                 for(client_socket_info* other_client: _clients) {
                     if(client->_id == other_client->_id) continue; 
-                    result = send(other_client->_client_socket, msg_to_send._content, rchat::BUF_LEN,0);
+                    result = send(other_client->_client_socket, msg_to_send._content, (int)strlen(msg_to_send._content) + 1,0);
                     if(result == SOCKET_ERROR) {
                         rchat::printerrorld("Send failed with error", WSAGetLastError());
                         closesocket(client->_client_socket);
@@ -174,7 +174,7 @@ void server::broadcast_handler(){
 void client_socket_info::receive_handler() {
     int result;
     while(true) {
-        result = recv(_client_socket, _msg._content, rchat::BUF_LEN, 0 );
+        result = recv(_client_socket, _msg._content, rchat::global_network_variables::buflen, 0 );
         if(result > 0 ) {
             if(result == SOCKET_ERROR) {
                 printf("send failed with error: %d\n", WSAGetLastError());
@@ -183,17 +183,15 @@ void client_socket_info::receive_handler() {
                 return;
             }
             
-            if(rchat::EXIT.compare(_msg._content) == 0) {
+            if(rchat::global_network_variables::exit.compare(_msg._content) == 0) {
                 // Received EXIT condition - remove client
                 _is_active = false;
-                continue; 
+                break; 
             }
            
             // Lock the message queue
             std::lock_guard<std::mutex> guard(_m_message_queue_mutex);
             _message_queue.push(_msg);
-            
-            
         }
         else if(result == 0) {
         }

@@ -8,8 +8,8 @@
 #include <stdio.h>
 #include <iostream> 
 #include <thread>
-#include "formatting.h"
-#include "globals.h"
+#include <config.h>
+#include <formatting.h>
 
 class client_session {
 public:
@@ -36,5 +36,9 @@ private:
     const char* _ip; 
     
     bool _end_session = false;
+
+    std::thread _receive_ref; 
+    std::thread _send_ref; 
+    
 };
 #endif
