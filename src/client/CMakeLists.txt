@@ -1,8 +1,12 @@
-add_library(client "")
-
-target_sources(client 
-    PRIVATE ${CMAKE_CURRENT_LIST_DIR}/client.cpp 
-    PUBLIC ${CMAKE_CURRENT_LIST_DIR}/client.h
+add_library(
+     client OBJECT
+     client_session.cpp 
+     client_session_handler.cpp 
 )
 
-target_include_directories(client PUBLIC ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_SOURCE_DIR}/src/helpers/)
+target_include_directories( client PUBLIC 
+                            ${CMAKE_SOURCE_DIR}/include/headers/client
+                            ${CMAKE_SOURCE_DIR}/src/helpers
+                         )
+
+

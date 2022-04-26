@@ -1,4 +1,4 @@
-#include "server.h"
+#include <server.h>
 
 /* For Visual Studio Compilers */
 #pragma comment(lib, "Ws2_32.lib")
@@ -113,7 +113,7 @@ void server::accept_connection() {
         for(client_socket_info* client: _clients) { 
                 if(client->_id == _client_id + 1) {
                     found_existing_client = true;
-                    break; 
+                    continue; 
                 }
         }
 
@@ -128,6 +128,19 @@ void server::accept_connection() {
     }
 }
 
+void server::prune_clients(){ 
+    int result; 
+    // delete any disabled clients
+    for(client_socket_info* client : _clients) {
+        if(!client->_is_active) {
+            printf("\n[IN-SESSION] Client with id %i has disconnected from the server...", client->_id);
+            _clients.erase(std::remove(_clients.begin(), _clients.end(), client), _clients.end());
+            client->_receive_ref.join();    
+            delete client; 
+        }
+    }
+}
+
 void server::broadcast_handler(){
     int result; 
     while(true) {
@@ -135,6 +148,7 @@ void server::broadcast_handler(){
         if(_ready_to_send) {
             // Lock the list
             std::lock_guard<std::mutex> guard(_g_client_list_mutex);
+            prune_clients(); 
             for(client_socket_info* client : _clients) {
                 if(client->_message_queue.empty()) continue;
                 // Lock the message queue
@@ -142,8 +156,7 @@ void server::broadcast_handler(){
                 rchat::message msg_to_send = client->_message_queue.front();
                 for(client_socket_info* other_client: _clients) {
                     if(client->_id == other_client->_id) continue; 
-                    result = send(other_client->_client_socket, "msg_to_send._content", 1,0);
-                    //rchat::fprintsession("Sending message to other clients: ", msg_to_send._content);
+                    result = send(other_client->_client_socket, msg_to_send._content, rchat::BUF_LEN,0);
                     if(result == SOCKET_ERROR) {
                         rchat::printerrorld("Send failed with error", WSAGetLastError());
                         closesocket(client->_client_socket);
@@ -169,9 +182,17 @@ void client_socket_info::receive_handler() {
                 WSACleanup();
                 return;
             }
+            
+            if(rchat::EXIT.compare(_msg._content) == 0) {
+                // Received EXIT condition - remove client
+                _is_active = false;
+                continue; 
+            }
+           
             // Lock the message queue
             std::lock_guard<std::mutex> guard(_m_message_queue_mutex);
             _message_queue.push(_msg);
+            
             
         }
         else if(result == 0) {

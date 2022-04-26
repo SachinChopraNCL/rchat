@@ -1,8 +1,5 @@
-#ifndef CLIENT_H
-#define CLIENT_H
-
-/* For mingw compiler */
-#define _WIN32_WINNT 0x501
+#ifndef CLIENT_SESSION_H
+#define CLIENT_SESSION_H
 
 #include <WinSock2.h>
 #include <windows.h>
@@ -14,9 +11,9 @@
 #include "formatting.h"
 #include "globals.h"
 
-class client {
+class client_session {
 public:
-    client(char* port, char* ip):_port(port), _ip(ip){}; 
+    client_session(const char* port, const char* ip):_port(port), _ip(ip){}; 
     void start_session();
     void end_session(); 
 private: 
@@ -35,8 +32,8 @@ private:
                     _hints;
 
     int _result;
-    char* _port; 
-    char* _ip; 
+    const char* _port; 
+    const char* _ip; 
     
     bool _end_session = false;
 };

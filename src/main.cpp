@@ -1,4 +1,4 @@
-#include "client.h"
+#include "client_session_handler.h"
 #include "server.h"
 #include "formatting.h"
 
@@ -10,16 +10,19 @@ int __cdecl main(int argc, char** argv){
     std::string client_str("client");
 
     if(client_str.compare(argv[1]) == 0){
-        if(argc == 3) {
-            rchat::line();
-            rchat::printstart("Client Interface");
-            rchat::linebreak();
-            client client_process = client(PORT, argv[2]);
-            client_process.start_session();
-        }
-        else {
-            rchat::printerrori("INVALID NUMBER OF ARGUMENTS FOR CLIENT SESSION... Expected 3 got", argc);
-        }
+        // if(argc == 3) {
+        //     rchat::line();
+        //     rchat::printstart("Client Interface");
+        //     rchat::linebreak();
+        //     client_session client_process = client_session(PORT, argv[2]);
+        //     client_process.start_session();
+        // }
+        // else {
+        //     rchat::printerrori("INVALID NUMBER OF ARGUMENTS FOR CLIENT SESSION... Expected 3 got", argc);
+        // }
+
+        client_session_handler* handler = new client_session_handler();
+        handler->run();  
     } 
     else {
         if(argc == 2) {

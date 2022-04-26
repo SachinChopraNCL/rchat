@@ -27,6 +27,7 @@ public:
     void end_session(); 
 private:
     void initialise_wsa();
+    void prune_clients(); 
     void create_listener(); 
     void activate_listener(); 
     void accept_connection();

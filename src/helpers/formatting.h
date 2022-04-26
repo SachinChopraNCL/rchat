@@ -9,6 +9,8 @@ namespace rchat {
     
     inline void linebreak() { printf("\n--------------------------------"); }
 
+    inline void printconsole(const char* message) { printf("[CONSOLE] %s\n", message); }
+
     inline void printstart(const char* message) { printf("\n[STARTUP] %s", message); }
 
     inline void printsession(const char* message) { printf("\n[IN-SESSION] %s", message);}

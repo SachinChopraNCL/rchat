@@ -6,7 +6,7 @@ add_subdirectory(helpers)
 
 
 target_link_libraries(rchat
-    PRIVATE
+    PUBLIC
     client
     server
     helpers

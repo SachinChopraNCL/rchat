@@ -1,4 +1,4 @@
-#include "client.h"
+#include <client_session.h>
 
 /* For Visual Studio Compilers */
 #pragma comment(lib, "Ws2_32.lib")
@@ -6,14 +6,15 @@
 #pragma comment(lib, "AdvApi32.lib")
 /*----------------------------*/
 
-void client::start_session() {
+void client_session::start_session() {
     initialise_wsa();
     find_server_connect();
     kick_threads(); 
 }
+ 
 
-
-void client::initialise_wsa() {
+void client_session::initialise_wsa() {
+    printf("--------------------------------");
     rchat::printstart("WSA is starting up...");
     
     // Initialise winsock2 
@@ -30,7 +31,7 @@ void client::initialise_wsa() {
     _hints.ai_protocol = IPPROTO_TCP;
 }
 
-void client::find_server_connect(){
+void client_session::find_server_connect(){
     rchat::printstart("Getting server information...");
 
     // Translation from host name to an address getting all sockets that could be used for connection
@@ -72,7 +73,8 @@ void client::find_server_connect(){
     rchat::linebreak();
 }
 
-void client::kick_threads() {
+void client_session::kick_threads() {
+
     if(_result == SOCKET_ERROR) {
         rchat::printerrorld("Send failed with error", WSAGetLastError());
         closesocket(_server);
@@ -80,14 +82,14 @@ void client::kick_threads() {
         return; 
     }
 
-    std::thread sender(&client::send_handler, this);
-    std::thread receiver(&client::receive_handler, this);
+    std::thread sender(&client_session::send_handler, this);
+    std::thread receiver(&client_session::receive_handler, this);
    
     sender.join();
     receiver.join();
 }
 
-void client::send_handler() {
+void client_session::send_handler() {
     int result; 
     while(true) {
         // handle input 
@@ -108,7 +110,7 @@ void client::send_handler() {
     }
 }
 
-void client::receive_handler() {
+void client_session::receive_handler() {
     char recvbuf[rchat::BUF_LEN];
     int result;
     while(true) {
@@ -124,7 +126,7 @@ void client::receive_handler() {
 }
 
 
-void client::end_session() {
+void client_session::end_session() {
     _result = shutdown(_server , SD_SEND);
     if(_result == SOCKET_ERROR) {
         rchat::printerrorld("Shutdown failed with error", WSAGetLastError());
