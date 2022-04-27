@@ -9,7 +9,6 @@
 #include <iostream> 
 #include <thread>
 #include <config.h>
-#include <formatting.h>
 
 class client_session {
 public:

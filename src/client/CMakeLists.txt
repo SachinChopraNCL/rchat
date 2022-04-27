@@ -7,7 +7,7 @@ add_library(
 target_include_directories( client PUBLIC 
                             ${CMAKE_SOURCE_DIR}/include/headers/client
                             ${CMAKE_SOURCE_DIR}/include/config
-                            ${CMAKE_SOURCE_DIR}/src/helpers
+                            ${CMAKE_SOURCE_DIR}/include/headers/helpers
                          )
 
 

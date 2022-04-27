@@ -8,7 +8,12 @@
 
 namespace rchat { 
 
-    //inline void line() { printf("--------------------------------\n"); }
+    inline void line(int number_of_lines = 1) { 
+        for(int i = 0; i < number_of_lines; i++) {
+            printf("--------------------------------\n"); 
+        }
+    }
+
     enum message_type { 
         CONSOLE, 
         START,
@@ -23,7 +28,7 @@ namespace rchat {
         {message_type::ERR, "[ERR]"}
     };
 
-    std::string get_enum_as_string(message_type e) { 
+    inline std::string get_enum_as_string(message_type e) { 
         auto it = enums_as_string.find(e);
         return it == enums_as_string.end() ? "[INVALID LOG TYPE]" : it->second;
     }

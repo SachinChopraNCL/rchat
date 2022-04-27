@@ -1,10 +1,12 @@
 #include <client_session.h>
-
+#include <logging.h>
 /* For Visual Studio Compilers */
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "Mswsock.lib")
 #pragma comment(lib, "AdvApi32.lib")
 /*----------------------------*/
+
+using namespace rchat;
 
 void client_session::start_session() {
     initialise_wsa();
@@ -14,16 +16,15 @@ void client_session::start_session() {
  
 
 void client_session::initialise_wsa() {
-    printf("--------------------------------");
-    rchat::printstart("WSA is starting up...");
-    
+    line(); 
+    log(message_type::START, "WSA is starting up...");
     // Initialise winsock2 
     _result = WSAStartup(MAKEWORD(2,2), &_wsa_data);
     if(_result != 0) { 
-        rchat::printerrori("WSAStartup failed with error", _result);
+        log(message_type::ERR, "Startup faield with error", _result);
     }
 
-    rchat::linebreak();
+    line(); 
 
     ZeroMemory(&_hints, sizeof(_hints));
     _hints.ai_family = AF_UNSPEC;
@@ -32,12 +33,12 @@ void client_session::initialise_wsa() {
 }
 
 void client_session::find_server_connect(){
-    rchat::printstart("Getting server information...");
+    log(message_type::START, "Getting server information...");
 
     // Translation from host name to an address getting all sockets that could be used for connection
     _result = getaddrinfo(_ip, _port, &_hints, &_addr_results);
     if(_result != 0) {
-        rchat::printerrori("Getaddrinfo failed with error", _result);
+        log(message_type::ERR,"Getaddrinfo failed with error", _result);
         WSACleanup();
         return;
     }
@@ -46,7 +47,7 @@ void client_session::find_server_connect(){
     for(_ptr_to_addr = _addr_results; _ptr_to_addr != NULL;  _ptr_to_addr = _ptr_to_addr->ai_next) {
         _server  = socket(_ptr_to_addr->ai_family, _ptr_to_addr->ai_socktype, _ptr_to_addr->ai_protocol);
         if(_server  == INVALID_SOCKET) {
-            rchat::printerrorld("Socket failed with error", WSAGetLastError());
+            log(message_type::ERR,"Socket failed with error", WSAGetLastError());
             WSACleanup();
             return; 
         }
@@ -65,18 +66,18 @@ void client_session::find_server_connect(){
     freeaddrinfo(_addr_results);
 
     if(_server  == INVALID_SOCKET) {
-        rchat::printerror("Unable to connect to server!");
+        log(message_type::ERR,"Unable to connect to server!");
         WSACleanup();
         return; 
     }
 
-    rchat::linebreak();
+    line(); 
 }
 
 void client_session::kick_threads() {
 
     if(_result == SOCKET_ERROR) {
-        rchat::printerrorld("Send failed with error", WSAGetLastError());
+        log(message_type::ERR,"Send failed with error", WSAGetLastError());
         closesocket(_server);
         WSACleanup();
         return; 
@@ -94,11 +95,11 @@ void client_session::send_handler() {
     while(true) {
         // handle input 
         char sendbuf[rchat::global_network_variables::buflen];
-        rchat::printsession("Send message: ");
+        log(message_type::SESSION,"Send message: ");
         scanf("%s", sendbuf);
         result = send(_server , sendbuf, (int)strlen(sendbuf) + 1, 0);
         if(result == SOCKET_ERROR) {
-            rchat::printerrorld("Send failed with error", WSAGetLastError());
+            log(message_type::ERR,"Send failed with error", WSAGetLastError());
             end_session();
             return;
         }
@@ -116,10 +117,10 @@ void client_session::receive_handler() {
         result = recv(_server , recvbuf, rchat::global_network_variables::buflen, 0);
         if(_end_session) return; 
         if(result > 0) { 
-            rchat::fprintsession("Server Response", recvbuf); 
+             log(message_type::SESSION,"Server Response", recvbuf); 
         }   
         else if(result < 0){  
-            rchat::printerrorld("Recv failed with error", WSAGetLastError()); 
+           log(message_type::ERR,"Recv failed with error", WSAGetLastError()); 
         }
     }   
 }
@@ -129,12 +130,12 @@ void client_session::end_session() {
     _end_session = true;
     _result = shutdown(_server , SD_SEND);
     if(_result == SOCKET_ERROR) {
-        rchat::printerrorld("Shutdown failed with error", WSAGetLastError());
+       log(message_type::ERR,"Shutdown failed with error", WSAGetLastError());
         closesocket(_server);
         _server  = INVALID_SOCKET;
         return;
     } 
-    rchat::printsession("Closing session");
+    log(message_type::SESSION,"Closing session");
     closesocket(_server);
     WSACleanup();
 }

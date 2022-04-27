@@ -13,7 +13,6 @@ using namespace rchat;
 std::mutex _g_client_list_mutex; 
 
 void server::start_session() {
-    log(message_type::CONSOLE, "Hello", 2);
     initialise_wsa();
     create_listener();
     activate_listener();
@@ -21,7 +20,7 @@ void server::start_session() {
 }
 
 void server::initialise_wsa() {
-    rchat::printstart("WSA is starting up...");
+    log(message_type::START, "WSA is starting up...");
     
     // Initialise winsock2 
     _result = WSAStartup(MAKEWORD(2,2), &_wsa_data);
@@ -30,7 +29,7 @@ void server::initialise_wsa() {
         return;
     }
 
-    rchat::linebreak();
+    line(); 
 
     ZeroMemory(&_hints, sizeof(_hints));
     _hints.ai_family = AF_INET;
@@ -40,7 +39,7 @@ void server::initialise_wsa() {
 }
 
 void server::create_listener() { 
-    rchat::printstart("Creating listener...");
+    log(message_type::START, "Creating listener...");
 
     // Translation from host name to an address getting all sockets that could be used for connection
     _result = getaddrinfo(NULL, _port, &_hints, &_addr_results);
@@ -71,11 +70,11 @@ void server::create_listener() {
 
     freeaddrinfo(_addr_results);
     
-    rchat::linebreak();
+    line(); 
 }
 
 void server::activate_listener() {
-    rchat::printstart("Server listening...");
+    log(message_type::START, "Server listening...");
 
     // Set the socket to listen - waiting for a connection from a client
     _result = listen(_listener, SOMAXCONN);
@@ -85,7 +84,8 @@ void server::activate_listener() {
         WSACleanup();
         return;
     }
-    rchat::linebreak();
+
+    line(); 
 }
 
 void server::kick_threads() {
@@ -104,7 +104,7 @@ void server::accept_connection() {
         // Accepts the connection from the first socket on the queue and assigns it
         SOCKET client_socket = accept(_listener, NULL, NULL);
         _ready_to_send = true;
-        rchat::printstart("New client is connected to server...");
+        log(message_type::START, "New client is connected to server...");
         if(client_socket == INVALID_SOCKET) {
             printf("Accept failed with error: %d\n", WSAGetLastError());
             closesocket(_listener);
@@ -128,7 +128,7 @@ void server::accept_connection() {
 
         _client_id++; 
         
-        rchat::linebreak();
+        line();
     }
 }
 
@@ -137,7 +137,7 @@ void server::prune_clients(){
     // delete any disabled clients
     for(client_socket_info* client : _clients) {
         if(!client->_is_active) {
-            printf("\n[IN-SESSION] Client with id %i has disconnected from the server...", client->_id);
+            log(message_type::SESSION, "Client is disconnecting with ID...", client->_id);
             _clients.erase(std::remove(_clients.begin(), _clients.end(), client), _clients.end());
             client->_receive_ref.join();    
             delete client; 
@@ -162,7 +162,7 @@ void server::broadcast_handler(){
                     if(client->_id == other_client->_id) continue; 
                     result = send(other_client->_client_socket, msg_to_send._content, (int)strlen(msg_to_send._content) + 1,0);
                     if(result == SOCKET_ERROR) {
-                        rchat::printerrorld("Send failed with error", WSAGetLastError());
+                        log(message_type::ERR, "Send failed with error", WSAGetLastError());
                         closesocket(client->_client_socket);
                         WSACleanup();
                         return;
@@ -180,19 +180,18 @@ void client_socket_info::receive_handler() {
     while(true) {
         result = recv(_client_socket, _msg._content, rchat::global_network_variables::buflen, 0 );
         if(result > 0 ) {
-            if(result == SOCKET_ERROR) {
-                printf("send failed with error: %d\n", WSAGetLastError());
+
+            bool exit = rchat::global_network_variables::exit.compare(_msg._content) == 0 || result == SOCKET_ERROR;
+
+            if(exit) {
+                _is_active = false; 
                 closesocket(_client_socket);
-                WSACleanup();
+                if(result == SOCKET_ERROR) {
+                    printf("send failed with error: %d\n", WSAGetLastError());
+                }
                 return;
             }
             
-            if(rchat::global_network_variables::exit.compare(_msg._content) == 0) {
-                // Received EXIT condition - remove client
-                _is_active = false;
-                break; 
-            }
-           
             // Lock the message queue
             std::lock_guard<std::mutex> guard(_m_message_queue_mutex);
             _message_queue.push(_msg);

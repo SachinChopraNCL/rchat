@@ -15,7 +15,6 @@
 #include <mutex> 
 #include <algorithm>
 
-#include <formatting.h>
 #include <config.h>
 #include <clientsocketinfo.h>
 

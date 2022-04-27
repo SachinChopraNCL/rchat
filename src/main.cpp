@@ -1,39 +1,31 @@
-#include "client_session_handler.h"
-#include "server.h"
-#include "formatting.h"
+#include <client_session_handler.h>
+#include <server.h>
+#include <logging.h>
 
 #define BUFLEN 512
 #define PORT "27015"
+
+using namespace rchat; 
 
 int __cdecl main(int argc, char** argv){
     
     std::string client_str("client");
 
     if(client_str.compare(argv[1]) == 0){
-        // if(argc == 3) {
-        //     rchat::line();
-        //     rchat::printstart("Client Interface");
-        //     rchat::linebreak();
-        //     client_session client_process = client_session(PORT, argv[2]);
-        //     client_process.start_session();
-        // }
-        // else {
-        //     rchat::printerrori("INVALID NUMBER OF ARGUMENTS FOR CLIENT SESSION... Expected 3 got", argc);
-        // }
 
         client_session_handler* handler = new client_session_handler();
         handler->run();  
     } 
     else {
         if(argc == 2) {
-            rchat::line();
-            rchat::printstart("Server Interface");
-            rchat::linebreak();
+            line();
+            log(message_type::START,"Server Interface");
+            line();
             server server_process = server(BUFLEN, PORT);
             server_process.start_session();
         }
         else {
-            rchat::printerrori("INVALID NUMBER OF ARGUMENTS FOR CLIENT SESSION... Expected 2 got", argc);
+            log(message_type::ERR,"INVALID NUMBER OF ARGUMENTS FOR CLIENT SESSION... Expected 2 got", argc);
         }
     }
 
