@@ -4,8 +4,6 @@
 #include <stdio.h>
 
 
-// Swapping to MACROS!
-
 namespace rchat {
     
     inline void line() { printf("--------------------------------");}

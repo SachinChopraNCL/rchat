@@ -1,4 +1,5 @@
 #include <server.h>
+#include <logging.h>
 
 /* For Visual Studio Compilers */
 #pragma comment(lib, "Ws2_32.lib")
@@ -6,10 +7,13 @@
 #pragma comment(lib, "AdvApi32.lib")
 /*----------------------------*/
 
+using namespace rchat; 
+
 // Global lock for the client list
 std::mutex _g_client_list_mutex; 
 
 void server::start_session() {
+    log(message_type::CONSOLE, "Hello", 2);
     initialise_wsa();
     create_listener();
     activate_listener();
