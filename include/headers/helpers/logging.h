@@ -18,14 +18,17 @@ namespace rchat {
         CONSOLE, 
         START,
         SESSION,
-        ERR
+        ERR,
+        INPUT,
+        NOTAG
     };
 
     const std::map<message_type, std::string> enums_as_string {
         {message_type::CONSOLE, "[CONSOLE]"},
         {message_type::START, "[START]"},
         {message_type::SESSION, "[SESSION]"},
-        {message_type::ERR, "[ERR]"}
+        {message_type::INPUT, "[SESSION]"},
+        {message_type::ERR, "[ERROR]"}
     };
 
     inline std::string get_enum_as_string(message_type e) { 
@@ -34,9 +37,13 @@ namespace rchat {
     }
 
     template<typename... t>
-        static void log(message_type type ,t&&... args) { 
-            std::cout << get_enum_as_string(type) << " ";
-            ((std::cout << args << ' '), ...) << "\n";
+        static void log(message_type type = message_type::NOTAG, t&&... args) { 
+            if(type != message_type::NOTAG) {
+                std::cout << get_enum_as_string(type) << " ";
+            }
+            // voodoo fold statement
+            ((std::cout << args << ' '), ...);
+            if(type != message_type::INPUT) { std::cout << '\n'; }
         }
 }
 

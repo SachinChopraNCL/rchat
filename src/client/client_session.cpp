@@ -16,7 +16,6 @@ void client_session::start_session() {
  
 
 void client_session::initialise_wsa() {
-    line(); 
     log(message_type::START, "WSA is starting up...");
     // Initialise winsock2 
     _result = WSAStartup(MAKEWORD(2,2), &_wsa_data);
@@ -59,7 +58,7 @@ void client_session::find_server_connect(){
             _server  = INVALID_SOCKET; 
             continue;
         }
-        printf("Connected!");
+        log(message_type::START, "Connected!");
         break;
     }
     
@@ -95,7 +94,7 @@ void client_session::send_handler() {
     while(true) {
         // handle input 
         char sendbuf[rchat::global_network_variables::buflen];
-        log(message_type::SESSION,"Send message: ");
+        log(message_type::INPUT,"Send message: ");
         scanf("%s", sendbuf);
         result = send(_server , sendbuf, (int)strlen(sendbuf) + 1, 0);
         if(result == SOCKET_ERROR) {

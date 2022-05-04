@@ -44,7 +44,7 @@ void server::create_listener() {
     // Translation from host name to an address getting all sockets that could be used for connection
     _result = getaddrinfo(NULL, _port, &_hints, &_addr_results);
     if(_result != 0 ) {
-        printf("getaddrinfo failed with error: %d\n", _result);
+        log(message_type::ERR, "getaddrinfo failed with error: ", _result);
         WSACleanup();
         return; 
     }
@@ -52,7 +52,7 @@ void server::create_listener() {
     // Create a socket
     _listener = socket(_addr_results->ai_family, _addr_results->ai_socktype, _addr_results->ai_protocol);
     if(_result == SOCKET_ERROR) {
-        printf("bind failed with error: %d\n", WSAGetLastError());
+        log(message_type::ERR, "bind failed with error: ", WSAGetLastError());
         freeaddrinfo(_addr_results);
         closesocket(_listener);
         WSACleanup();
@@ -62,7 +62,7 @@ void server::create_listener() {
     // Binds the local address to a socket - it is ready to listen
     _result = bind(_listener, _addr_results->ai_addr, (int)_addr_results->ai_addrlen);
     if(_result == SOCKET_ERROR) {
-        printf("bind failed with error: %d\n", WSAGetLastError());
+        log(message_type::ERR, "bind failed with error: ", WSAGetLastError());
         freeaddrinfo(_addr_results);
         closesocket(_listener);
         WSACleanup();
@@ -106,7 +106,7 @@ void server::accept_connection() {
         _ready_to_send = true;
         log(message_type::START, "New client is connected to server...");
         if(client_socket == INVALID_SOCKET) {
-            printf("Accept failed with error: %d\n", WSAGetLastError());
+            log(message_type::ERR, "Accept failed with error: ", WSAGetLastError());
             closesocket(_listener);
             WSACleanup();
             return; 
@@ -168,7 +168,7 @@ void server::broadcast_handler(){
                         return;
                     }
                 }
-                printf("\n[IN-SESSION] Client %i: %s \n", client->_id, msg_to_send._content);
+                log(message_type::SESSION, "Client ", client->_id, ": ",msg_to_send._content);
                 client->_message_queue.pop();
             }
         }
@@ -187,7 +187,7 @@ void client_socket_info::receive_handler() {
                 _is_active = false; 
                 closesocket(_client_socket);
                 if(result == SOCKET_ERROR) {
-                    printf("send failed with error: %d\n", WSAGetLastError());
+                    log(message_type::ERR, "send failed with error: ", WSAGetLastError());
                 }
                 return;
             }
@@ -199,7 +199,7 @@ void client_socket_info::receive_handler() {
         else if(result == 0) {
         }
         else {
-            printf("recv failed with error: %d\n", WSAGetLastError());
+            log(message_type::ERR, "recv failed with error: ", WSAGetLastError());
             closesocket(_client_socket);
             WSACleanup();
             return;
