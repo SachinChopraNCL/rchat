@@ -18,9 +18,6 @@ int __cdecl main(int argc, char** argv){
     } 
     else {
         if(argc == 2) {
-            line();
-            log(message_type::START,"Server Interface");
-            line();
             server server_process = server(BUFLEN, PORT);
             server_process.start_session();
         }

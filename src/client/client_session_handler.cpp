@@ -5,9 +5,18 @@
 using namespace rchat;
 
 void client_session_handler::run() {
-    log(message_type::CONSOLE, "Welcome to RChat Client..."); 
+    line();
+    log(message_type::CONSOLE, "Welcome to RChat Client... Enter command INFO for Commands"); 
+    line();
     while(_current_state != session_state::EXIT) {
+        if(_current_state == session_state::RESET) {
+            line(2);
+            log(message_type::CONSOLE, "Welcome back...");
+            line();
+            _current_state = session_state::MENU;
+        }
         if(_current_state == session_state::MENU) {
+            log(message_type::INPUT, "Enter Command: ");
             std::string option;
             std::getline(std::cin , option); 
             run_command(option);
@@ -33,26 +42,28 @@ void client_session_handler::run_command(std::string option) {
 
 void client_session_handler::run_session(std::string ip) {
     line(2);  
-    _current_state = session_state::IN_SESSION;
     auto current_session = std::make_unique<client_session>(_port.c_str(), ip.c_str()); 
-    current_session->start_session(); 
+    current_session->start_session();
+    _current_state = session_state::RESET; 
 }
 
 void client_session_handler::exit_session() { 
     
 }
 
-void client_session_handler::reset_session() { 
-
-}
-
 void client_session_handler::get_info() { 
-    log(message_type::CONSOLE, "Port -", _port);
+    line();
+    log(message_type::CONSOLE, "CONNECT x - Connect to server with IP x");
+    log(message_type::CONSOLE, "SETPORT x - Set port to connect on server to X");
+    log(message_type::CONSOLE, "Current Port -", _port);
+    line();
 }
 
 void client_session_handler::set_port(std::string option) {
+    line();
     log(message_type::CONSOLE, "Port was", _port, "Now set to", option);
     _port = option;
+    line();
 }
 
 std::vector<std::string> client_session_handler::get_parameters(const std::string option) {

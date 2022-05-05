@@ -17,7 +17,7 @@
 enum session_state {
     NULL_STATE,
     MENU,
-    IN_SESSION, 
+    RESET, 
     EXIT
 };
 
@@ -32,7 +32,6 @@ private:
     void set_port(std::string port);
     void get_info(); 
     void exit_session();
-    void reset_session(); 
     void run_command(const std::string option);
     std::vector<std::string> get_parameters(std::string option);
     std::string _commands [NUM_COMMANDS] = {"CONNECT", "SETPORT", "INFO", "EXIT"};

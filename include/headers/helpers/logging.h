@@ -10,7 +10,7 @@ namespace rchat {
 
     inline void line(int number_of_lines = 1) { 
         for(int i = 0; i < number_of_lines; i++) {
-            printf("--------------------------------\n"); 
+            std::cout << "--------------------------------" << '\n'; 
         }
     }
 

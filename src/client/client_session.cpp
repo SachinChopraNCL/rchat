@@ -1,5 +1,7 @@
 #include <client_session.h>
 #include <logging.h>
+#include <stdio.h>
+
 /* For Visual Studio Compilers */
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "Mswsock.lib")
@@ -93,15 +95,16 @@ void client_session::send_handler() {
     int result; 
     while(true) {
         // handle input 
-        char sendbuf[rchat::global_network_variables::buflen];
+        std::string sendbuf;
         log(message_type::INPUT,"Send message: ");
-        scanf("%s", sendbuf);
-        result = send(_server , sendbuf, (int)strlen(sendbuf) + 1, 0);
+        std::getline(std::cin , sendbuf);
+        result = send(_server , sendbuf.c_str(), sendbuf.length() + 1, 0);
         if(result == SOCKET_ERROR) {
             log(message_type::ERR,"Send failed with error", WSAGetLastError());
             end_session();
             return;
         }
+
         if(rchat::global_network_variables::exit.compare(sendbuf) == 0) {
             end_session(); 
             return;
@@ -134,6 +137,7 @@ void client_session::end_session() {
         _server  = INVALID_SOCKET;
         return;
     } 
+    line();
     log(message_type::SESSION,"Closing session");
     closesocket(_server);
     WSACleanup();

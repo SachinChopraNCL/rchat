@@ -48,7 +48,8 @@
         "ctime": "cpp",
         "ratio": "cpp",
         "condition_variable": "cpp",
-        "mutex": "cpp"
+        "mutex": "cpp",
+        "map": "cpp"
     },
     "C_Cpp.errorSquiggles": "Enabled"
 }
