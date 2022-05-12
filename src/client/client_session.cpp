@@ -11,13 +11,15 @@
 using namespace rchat;
 
 void client_session::start_session() {
+    auto exe = "C:\\Users\\Sachin Chopra\\Documents\\rchat\\build\\console_process\\src\\consoleproc.exe";
+    auto _console_handler = console_process_handler::get_instance(exe);
     initialise_wsa();
     find_server_connect();
     kick_threads(); 
 }
  
 
-void client_session::initialise_wsa() {
+void client_session::initialise_wsa() {    
     log(message_type::START, "WSA is starting up...");
     // Initialise winsock2 
     _result = WSAStartup(MAKEWORD(2,2), &_wsa_data);
@@ -109,6 +111,9 @@ void client_session::send_handler() {
             end_session(); 
             return;
         }
+        auto _console_handler = console_process_handler::get_instance();
+        std::string send_string = "You: " + sendbuf;
+        _console_handler->print_to_process(send_string);
     }
 }
 
@@ -119,7 +124,8 @@ void client_session::receive_handler() {
         result = recv(_server , recvbuf, rchat::global_network_variables::buflen, 0);
         if(_end_session) return; 
         if(result > 0) { 
-             log(message_type::SESSION,"Server Response", recvbuf); 
+             auto _console_handler = console_process_handler::get_instance();
+             _console_handler->print_to_process(recvbuf);
         }   
         else if(result < 0){  
            log(message_type::ERR,"Recv failed with error", WSAGetLastError()); 
@@ -129,6 +135,8 @@ void client_session::receive_handler() {
 
 
 void client_session::end_session() {
+    auto _console_handler = console_process_handler::get_instance();
+    _console_handler->kill_instance();
     _end_session = true;
     _result = shutdown(_server , SD_SEND);
     if(_result == SOCKET_ERROR) {

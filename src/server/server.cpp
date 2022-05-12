@@ -164,7 +164,9 @@ void server::broadcast_handler(){
                 rchat::message msg_to_send = client->_message_queue.front();
                 for(client_socket_info* other_client: _clients) {
                     if(client->_id == other_client->_id) continue; 
-                    result = send(other_client->_client_socket, msg_to_send._content, (int)strlen(msg_to_send._content) + 1,0);
+                    char sending_message_buf[global_network_variables::buflen];
+                    snprintf(sending_message_buf, sizeof sending_message_buf, "Client %i: %s", client->_id, msg_to_send._content);
+                    result = send(other_client->_client_socket, sending_message_buf, (int)strlen(sending_message_buf) + 1,0);
                     if(result == SOCKET_ERROR) {
                         log(message_type::ERR, "Send failed with error", WSAGetLastError());
                         closesocket(client->_client_socket);

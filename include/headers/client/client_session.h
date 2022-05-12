@@ -9,6 +9,8 @@
 #include <iostream> 
 #include <thread>
 #include <config.h>
+#include <console_process_handler.h>
+
 
 class client_session {
 public:
@@ -37,7 +39,6 @@ private:
     bool _end_session = false;
 
     std::thread _receive_ref; 
-    std::thread _send_ref; 
-    
+    std::thread _send_ref;     
 };
 #endif

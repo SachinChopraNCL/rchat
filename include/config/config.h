@@ -19,10 +19,7 @@ namespace rchat {
         char _content [global_network_variables::buflen];
     };
 
+
 }
-
-
-
-
 
 #endif 

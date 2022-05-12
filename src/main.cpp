@@ -1,6 +1,8 @@
 #include <client_session_handler.h>
 #include <server.h>
 #include <logging.h>
+#include <iostream>
+
 
 #define BUFLEN 512
 #define PORT "27015"
@@ -8,7 +10,7 @@
 using namespace rchat; 
 
 int __cdecl main(int argc, char** argv){
-    
+
     std::string client_str("client");
 
     if(client_str.compare(argv[1]) == 0){
@@ -29,4 +31,3 @@ int __cdecl main(int argc, char** argv){
 
     return 1; 
 }
-
