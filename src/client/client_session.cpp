@@ -12,7 +12,7 @@ using namespace rchat;
 
 void client_session::start_session() {
     auto exe = "C:\\Users\\Sachin Chopra\\Documents\\rchat\\build\\console_process\\src\\consoleproc.exe";
-    auto _console_handler = console_process_handler::get_instance(exe);
+    console_process_handler::get_instance(exe);
     initialise_wsa();
     find_server_connect();
     kick_threads(); 
@@ -24,7 +24,7 @@ void client_session::initialise_wsa() {
     // Initialise winsock2 
     _result = WSAStartup(MAKEWORD(2,2), &_wsa_data);
     if(_result != 0) { 
-        log(message_type::ERR, "Startup faield with error", _result);
+        log(message_type::ERR, "Startup failed with error", _result);
     }
 
     line(); 
@@ -93,8 +93,19 @@ void client_session::kick_threads() {
     _send_ref.join();
 }
 
+void client_session::send_metadata() { 
+    _result = send(_server, _session_name.c_str(), _session_name.length() + 1, 0); 
+       if(_result == SOCKET_ERROR) {
+        log(message_type::ERR,"Meta data Send failed with error", WSAGetLastError());
+        closesocket(_server);
+        WSACleanup();
+        return; 
+    }
+}
+
 void client_session::send_handler() {
     int result; 
+    send_metadata();
     while(true) {
         // handle input 
         std::string sendbuf;
@@ -124,8 +135,7 @@ void client_session::receive_handler() {
         result = recv(_server , recvbuf, rchat::global_network_variables::buflen, 0);
         if(_end_session) return; 
         if(result > 0) { 
-             auto _console_handler = console_process_handler::get_instance();
-             _console_handler->print_to_process(recvbuf);
+             console_process_handler::get_instance()->print_to_process(recvbuf);
         }   
         else if(result < 0){  
            log(message_type::ERR,"Recv failed with error", WSAGetLastError()); 
@@ -135,8 +145,7 @@ void client_session::receive_handler() {
 
 
 void client_session::end_session() {
-    auto _console_handler = console_process_handler::get_instance();
-    _console_handler->kill_instance();
+    console_process_handler::get_instance()->kill_instance();
     _end_session = true;
     _result = shutdown(_server , SD_SEND);
     if(_result == SOCKET_ERROR) {

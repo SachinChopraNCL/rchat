@@ -35,6 +35,12 @@ void client_session_handler::run_command(std::string option) {
     else if(option.find(_commands[2]) != std::string::npos) {
         get_info();
     }
+    else if(option.find(_commands[3]) != std::string::npos) {
+        exit_session();
+    }
+    else if(option.find(_commands[4]) != std::string::npos){
+        set_name(parameters[1]);
+    }
     else {
         log(message_type::ERR, "Option not recognised!");
     }
@@ -42,13 +48,16 @@ void client_session_handler::run_command(std::string option) {
 
 void client_session_handler::run_session(std::string ip) {
     line(2);  
-    auto current_session = std::make_unique<client_session>(_port.c_str(), ip.c_str()); 
+    auto current_session = std::make_unique<client_session>(_port.c_str(), ip.c_str(), _name); 
     current_session->start_session();
     _current_state = session_state::RESET; 
 }
 
 void client_session_handler::exit_session() { 
-    
+    line();
+    log(message_type::CONSOLE, "EXITING RCHAT!");
+    _current_state = session_state::EXIT;
+    line();
 }
 
 void client_session_handler::get_info() { 
@@ -64,6 +73,13 @@ void client_session_handler::set_port(std::string option) {
     log(message_type::CONSOLE, "Port was", _port, "Now set to", option);
     _port = option;
     line();
+}
+
+void client_session_handler::set_name(std::string option) { 
+    line();
+    log(message_type::CONSOLE, "Name was", _name, "Now set to", option);
+    _name = option; 
+    line(); 
 }
 
 std::vector<std::string> client_session_handler::get_parameters(const std::string option) {

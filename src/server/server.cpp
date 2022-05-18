@@ -165,7 +165,7 @@ void server::broadcast_handler(){
                 for(client_socket_info* other_client: _clients) {
                     if(client->_id == other_client->_id) continue; 
                     char sending_message_buf[global_network_variables::buflen];
-                    snprintf(sending_message_buf, sizeof sending_message_buf, "Client %i: %s", client->_id, msg_to_send._content);
+                    snprintf(sending_message_buf, sizeof sending_message_buf, "%s: %s", client->_client_name.c_str(), msg_to_send._content);
                     result = send(other_client->_client_socket, sending_message_buf, (int)strlen(sending_message_buf) + 1,0);
                     if(result == SOCKET_ERROR) {
                         log(message_type::ERR, "Send failed with error", WSAGetLastError());
@@ -174,7 +174,7 @@ void server::broadcast_handler(){
                         return;
                     }
                 }
-                log(message_type::SESSION, "Client ", client->_id, ": ",msg_to_send._content);
+                log(message_type::SESSION, client->_client_name, ": ",msg_to_send._content);
                 client->_message_queue.pop();
             }
         }
@@ -186,6 +186,11 @@ void client_socket_info::receive_handler() {
     while(true) {
         result = recv(_client_socket, _msg._content, rchat::global_network_variables::buflen, 0 );
         if(result > 0 ) {
+            if(!_received_meta) {
+                _client_name = _msg._content; 
+                _received_meta = true; 
+                continue;
+            }
 
             bool exit = rchat::global_network_variables::exit.compare(_msg._content) == 0 || result == SOCKET_ERROR;
 

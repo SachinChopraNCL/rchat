@@ -4,9 +4,6 @@
 #include <iostream>
 
 
-#define BUFLEN 512
-#define PORT "27015"
-
 using namespace rchat; 
 
 int __cdecl main(int argc, char** argv){
@@ -19,13 +16,12 @@ int __cdecl main(int argc, char** argv){
         handler->run();  
     } 
     else {
-        if(argc == 2) {
-            server server_process = server(BUFLEN, PORT);
-            server_process.start_session();
-        }
-        else {
-            log(message_type::ERR,"INVALID NUMBER OF ARGUMENTS FOR CLIENT SESSION... Expected 2 got", argc);
-        }
+        
+        std::string port = (argc == 3) ?  argv[2] : "27015";
+        server server_process = server(rchat::global_network_variables::buflen, port.c_str());
+        server_process.start_session();
+        
+    
     }
 
 
