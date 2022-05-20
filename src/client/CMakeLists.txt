@@ -12,4 +12,4 @@ target_include_directories( client PUBLIC
                          )
 
 
-target_link_libraries(client  console_process_handler)
+target_link_libraries(client PUBLIC console_process_handler)

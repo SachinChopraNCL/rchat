@@ -1,7 +1,7 @@
 #include <client_session.h>
 #include <logging.h>
 #include <stdio.h>
-
+#include <unistd.h>
 /* For Visual Studio Compilers */
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "Mswsock.lib")
@@ -10,9 +10,16 @@
 
 using namespace rchat;
 
+constexpr int max_path_size = 512; 
+
 void client_session::start_session() {
-    auto exe = "C:\\Users\\Sachin Chopra\\Documents\\rchat\\build\\console_process\\src\\consoleproc.exe";
-    console_process_handler::get_instance(exe);
+    /* Please do not move the exe */
+    char user_path[max_path_size];
+    getcwd(user_path, max_path_size);
+    std::string user_path_string = std::string(user_path);
+    std::string absolute_path = user_path + "\\console_process\\src\\consoleproc.exe";
+    
+    console_process_handler::get_instance(absolute_path.c_str());
     initialise_wsa();
     find_server_connect();
     kick_threads(); 

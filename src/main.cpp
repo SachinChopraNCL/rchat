@@ -17,13 +17,9 @@ int __cdecl main(int argc, char** argv){
     } 
     else {
         
-        std::string port = (argc == 3) ?  argv[2] : "27015";
-        server server_process = server(rchat::global_network_variables::buflen, port.c_str());
+        std::string port = (argc == 3) ?  argv[2] : global_network_variables::default_port;
+        server server_process = server(global_network_variables::buflen, port.c_str());
         server_process.start_session();
-        
-    
     }
-
-
     return 1; 
 }

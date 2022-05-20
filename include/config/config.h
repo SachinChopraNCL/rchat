@@ -11,6 +11,7 @@ namespace rchat {
         static const int buflen = 64; 
         static const int max_cmd_len = 64; 
         inline static const std::string exit = "EXIT";
+        inline static const std::string default_port = "27015";
     };
 
         
